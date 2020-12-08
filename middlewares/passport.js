@@ -1,133 +1,63 @@
-const passport = require('passport');
+const passport = require("passport");
 const passportJWT = require("passport-jwt");
-const bcrypt = require('bcrypt');
-const userModel = require('../models/User');
+const bcrypt = require("bcrypt");
+const userModel = require("../models/User");
 //const LocalStrategy = require('passport-local').Strategy;
-const FacebookStrategy = require('passport-facebook').Strategy;
-//const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-const configAuth = require('../utils/oauth');
-const JWTStrategy = passportJWT.Strategy;
-const ExtractJWT = passportJWT.ExtractJwt;
+const FacebookStrategy = require("passport-facebook").Strategy;
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy;
+const configAuth = require("../utils/oauth");
+//const JWTStrategy = passportJWT.Strategy;
+//const ExtractJWT = passportJWT.ExtractJwt;
 
-passport.serializeUser(function(user, done) {
-    done(null, user);
-});
-  
-passport.deserializeUser(function(obj, done) {
-    done(null, obj);
+passport.serializeUser(function (user, done) {
+  done(null, user);
 });
 
-// passport.use(new JWTStrategy({
-//         jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-//         secretOrKey   : 'nghiatq_jwt_secretkey'
-//     },
-//     (jwtPayload, done) => {
+passport.deserializeUser(function (obj, done) {
+  done(null, obj);
+});
 
-//         // find the others information of user in database if needed
-//         return userModel.get(jwtPayload.username).then(user => {
-//             return done(null, user);
-//         }).catch(err => {
-//             return done(err);
-//         });
-//     }
-// ));
 
-// passport.use(new LocalStrategy({
-//         usernameField: 'username',
-//         passwordField: 'password'
-//     }, 
-//     (username, password, done) => {
-//         userModel.get(username).then(rows => {
-//             if (rows.length === 0) {
-//                 return done(null, false, {
-//                     message: 'Tài khoản không tồn tại'
-//                 });
-//             }
-//             var user = rows[0];
-
-//             // compare password
-//             var ret = bcrypt.compareSync(password, user.password);
-//             if (ret) {
-                
-//                 // for security, send only username
-//                 return done(null, {
-//                     username: user.username
-//                 });
-//             }
-//             else {
-//                 return done(null, false, {
-//                     message: 'Mật khẩu không chính xác'
-//                 })
-//             }
-//         }).catch(err => {
-//             return done(err, false);
-//         })
-//     }
-// ));
-
-passport.use(new FacebookStrategy({
-    clientID: configAuth.facebookAuth.clientID,
-    clientSecret: configAuth.facebookAuth.clientSecret,
-    callbackURL: configAuth.facebookAuth.callbackURL,
-    profileFields: ['displayName']
-},
+passport.use(
+  new FacebookStrategy(
+    {
+      clientID: configAuth.facebookAuth.clientID,
+      clientSecret: configAuth.facebookAuth.clientSecret,
+      callbackURL: configAuth.facebookAuth.callbackURL,
+      profileFields: ["id", "displayName"],
+    },
     // facebook will send user token and profile information
-    function(accessToken, refreshToken, profile, done) {
-        const { username, name } = profile._json;
-        const userData = {
-          username: username,
-          name: name
-        };
-        new userModel(userData).save();
-        done(null, profile);
-      })
+    function (accessToken, refreshToken, profile, done) {
+      const { id, name } = profile._json;
+      const userData = {
+        username: id,
+        name: name,
+        password: accessToken,
+      };
+      new userModel(userData).save();
+      done(null, profile);
+    }
+  )
 );
 
-passport.use(new GoogleStrategy({
-    clientID: configAuth.googleAuth.clientID,
-    clientSecret: configAuth.googleAuth.clientSecret,
-    callbackURL: configAuth.googleAuth.callbackURL,
-},
-    
-    // exactly the same as facebook
-    function (token, refreshToken, profile, done) {
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: configAuth.googleAuth.clientID,
+      clientSecret: configAuth.googleAuth.clientSecret,
+      callbackURL: configAuth.googleAuth.callbackURL,
+      profileFields: ["email","displayName"],
+    },
 
-        process.nextTick(function () {
-
-            // look up into database to see if it already has this user
-            userModel.get(profile.id).then(rows => {
-
-                // if account exists, just return it
-                if (rows.length > 0) {
-                    return done(null, {
-                        username: rows[0].username
-                    });
-                }
-            
-                // if it doesn't have any, create one
-                var entity = {
-                    username: profile.id,
-                    password: token,
-                    email: profile.emails[0].value,
-                    fullname: profile.displayName
-                }
-
-                // add to database
-                userModel.add(entity).then(id => {
-                    return done(null, {
-                        username: entity.username
-                    });
-                }).catch(err => {
-                    console.log("Error when add google user: ", err);
-                    return done(null, false);
-                });
-
-            }).catch(err => {
-                if (err) {
-                    console.log("Error when get user by google id: ", err);
-                    return done(null, false);
-                }
-            });
-        });
-    })
+    function (accessToken, refreshToken, profile, done) {
+      const { email, name } = profile._json;
+      const userData = {
+        username: email,
+        name: name,
+        password: accessToken,
+      };
+      new userModel(userData).save();
+      done(null, profile);
+    }
+  )
 );

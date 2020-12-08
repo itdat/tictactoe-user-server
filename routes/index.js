@@ -3,7 +3,6 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-//const auth = require("../middleware/auth");
 const passport = require("passport");
 const validateRegisterInput = require("../validation/register");
 const validateLoginInput = require("../validation/login");
@@ -92,11 +91,29 @@ router.post("/login", async (req, res) => {
 });
 
 //Login with Facebook
-router.get('/login/facebook', passport.authenticate('facebook'));
+router.get("/login/facebook", passport.authenticate("facebook"));
 
-router.get('/login/facebook/callback', passport.authenticate('facebook', {
-  successRedirect: "/",
-  failureRedirect: "/fail"
-})
+router.get(
+  "/login/facebook/callback",
+  passport.authenticate("facebook", {
+    successRedirect: "/",
+    failureRedirect: "/fail",
+  })
+);
+
+// Login with Google
+router.get(
+  "/login/google",
+  passport.authenticate("google", {
+    scope: ["profile"],
+  })
+);
+
+router.get(
+  "/login/google/callback",
+  passport.authenticate("google", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+  })
 );
 module.exports = router;

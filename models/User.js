@@ -12,10 +12,6 @@ const UserSchema = new Schema({
   password: {
     type: String,
   },
-  token: {
-    type: String,
-    unique: true,
-  },
   date: {
     type: Date,
     default: Date.now,

@@ -8,7 +8,7 @@ const passport = require("passport");
 const validateRegisterInput = require("../validation/register");
 const validateLoginInput = require("../validation/login");
 //Register
-router.post("/", async (req, res) => {
+router.post("/register", async (req, res) => {
   const { errors, isValid } = await validateRegisterInput(req.body);
   if (!isValid) {
     return res.status(400).json(errors);
@@ -39,6 +39,53 @@ router.post("/", async (req, res) => {
         }
       });
     }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
+//Login
+router.post("/login", async (req, res) => {
+  const { errors, isValid } = await validateLoginInput(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+
+  const username = req.body.username;
+  const password = req.body.password;
+  try {
+    let user = await User.findOne({ username });
+    if (!user) {
+      errors.email = "User not found";
+      return res.status(404).json(errors);
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Incorrect password" });
+    }
+    const payload = {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+    };
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: 3600,
+      },
+      (err, token) => {
+        if (err) console.error("There is some error in token", err);
+        else {
+          res.json({
+            success: true,
+            token: `Bearer ${token}`,
+          });
+        }
+      }
+    );
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");

@@ -90,4 +90,13 @@ router.post("/login", async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
+
+//Login with Facebook
+router.get('/login/facebook', passport.authenticate('facebook'));
+
+router.get('/login/facebook/callback', passport.authenticate('facebook', {
+  successRedirect: "/",
+  failureRedirect: "/fail"
+})
+);
 module.exports = router;

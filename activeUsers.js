@@ -1,41 +1,37 @@
 const users = [];
 
-const addUser = ({ id, name }) => {
-  name = name.trim().toLowerCase();
+const addUser = ({ id, userId, name }) => {
+  if (!name || !userId) return { error: 'Username or userId are required.' };
 
-  let user = getUserByName(name);
+  // name = name.trim().toLowerCase();
+  // userId = userId.trim().toLowerCase();
 
-  if (!user) {
-    user = { id, name, online: true, target: [] }
-    users.push(user);
-  } else {
-    user.id = id;
-    // user.online = online;
-    user.target = [];
+  let existingUser = users.find((user) => /* user.userId === userId &&  */user.name === name);
+
+  if (existingUser) {
+    console.log(`..Online User named ${name} is existed`);
+    // Update socketId
+    existingUser.id = id;
+    return { user: existingUser };
   }
 
-  // const existingUser = users.find((user) => user.room === room && user.name === name);
+  const user = { id, userId, name };
 
-  // if(!name || !room) return { error: 'Username and room are required.' };
-  // if(existingUser) return { error: 'Username is taken.' };
+  users.push(user);
 
-  // const user = { id, name, room };
-
-  // users.push(user);
-
+  console.log(`..Online User named ${name} is added`);
+  
   return { user };
 }
 
 const removeUser = (id) => {
   const index = users.findIndex((user) => user.id === id);
 
-  if(index !== -1) return users.splice(index, 1)[0];
+  if (index !== -1) return users.splice(index, 1)[0];
 }
 
 const getUser = (id) => users.find((user) => user.id === id);
 
-const getUsersInRoom = (room) => users.filter((user) => user.room === room);
+const getOnlineUsers = () => users;
 
-const getUserByName = (name) => users.find((user) => user.name === name);
-
-module.exports = { addUser, removeUser, getUser, getUsersInRoom, getUserByName };
+module.exports = { addUser, removeUser, getUser, getOnlineUsers };

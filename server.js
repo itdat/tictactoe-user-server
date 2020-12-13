@@ -2,6 +2,7 @@
 const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
+const app = express();
 const cors = require('cors');
 const passport = require('passport');
 require('./middlewares/passport');
@@ -9,7 +10,7 @@ const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
 
 const router = require('./router');
 
-const app = express();
+
 const server = http.createServer(app);
 const io = socketio(server);
 

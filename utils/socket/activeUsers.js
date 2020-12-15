@@ -5,7 +5,7 @@ const addGuest = ({ id }) => {
 
   guests.push(guest);
 
-  console.log(`Client [${id}] has added as a guest.`);
+  console.log(`Client [${id}] has been added as a guest.`);
   return { guest };
 }
 
@@ -19,8 +19,8 @@ const setActiveUser = ({ id, name, status }) => {
   const existingUser = getUserByName(name)
   if (existingUser) return { error: 'This user is taken.' };
 
-  // Truong hop user nay dang nhap lai voi tai khoan khac, hoac tai khoan hien tai
-  // => da cap nhat lai tren socket id nay
+  // Truong hop user nay dang nhap lai voi tai khoan khac, hoac dang hap lai tai khoan hien tai
+  // khong quan tam nua boi vi sau day da cap nhat lai username tren socket id nay
 
   if (user) {
     user.name = name;
@@ -33,17 +33,15 @@ const setActiveUser = ({ id, name, status }) => {
 }
 
 const setRoom = ({ id, name, room, roomLevel }) => {
-  const user = getGuestById(id);
+  const guest = getGuestById(id);
 
-  if (!name) return { error: 'Username is required.' };
-  // if (!room) return { error: 'Room is required.' };
-  // if (!roomLevel) return { error: 'Room Level is required.' };
+  if (!room) return { error: 'Room is required.' };
+  if (!roomLevel) return { error: 'Room Level is required.' };
 
-  if (user) {
-    user.room = room;
-    user.roomLevel = roomLevel;
-
-    return { user }
+  if (guest) {
+    guest.room = room;
+    guest.roomLevel = roomLevel;
+    return { guest };
   }
 
   return { error: 'Unknown error occurred.' }
@@ -62,7 +60,7 @@ const getGuestById = (id) => guests.find((guest) => guest.id === id);
 
 const getUserByName = (name) => guests.find((guest) => guest.name === name);
 
-// TODO: Create Enums
+// TODO: Create file Enums.js later
 const getOnlineUsers = () => guests.filter((guest) => guest.status === 1);
 
 module.exports = { addGuest, setActiveUser, setRoom, removeGuest, getGuestById, getOnlineUsers };

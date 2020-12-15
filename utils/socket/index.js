@@ -35,12 +35,29 @@ const initSocket = ({ io }) => {
 
 
     // Set game room 
-    socket.on("joinRoom", ({ name, room, roomLevel }) => {
+    socket.on("joinRoom", ({ name, room, roomLevel }, callback) => {
       const { error, guest } = setRoom({ id: socket.id, name, room, roomLevel });
 
       if (error) return callback(error);
 
-      console.log(`Client ${guest.name} has joined the room named [${room}].`);
+      socket.join(guest.room);
+
+      socket.emit('message', { user: 'admin', text: `[${guest.name || socket.id}], welcome to room [${guest.room}].`});
+      socket.broadcast.to(guest.room).emit('message', { user: 'admin', text: `[${guest.name || socket.id}] has joined!` });
+
+      console.log(`Client [${socket.id}] has joined room [${guest.room}].`);
+      callback();
+    });
+
+
+    // When someone send message
+    socket.on('sendMessage', (message, callback) => {
+      const guest = getGuestById(socket.id);
+
+      if (!guest.room) return "[Dev] Please reload page to get new connect."
+  
+      io.to(guest.room).emit('message', { user: `[${guest.name || socket.id}]`, text: message });
+  
       callback();
     });
 

@@ -38,41 +38,9 @@ app.use(router);
 const socketio = require('socket.io');
 const options = { /* ... */ };
 const io = socketio(server, options);
-const { addUser, removeUser, getUser, getOnlineUsers } = require('./activeUsers');
+const { initSocket } = require('./utils/socket');
 
-io.on('connection', socket => {
-  console.log(`[${socket.id}] Socket.io is connected`);
-
-  // test
-  io.emit('getOnlineUsers', { users: getOnlineUsers() });
-
-  socket.on("join", ({ userId, name }) => {
-    if (!userId) {
-      userId = 'defaultId';
-    }
-
-    const { error, user } = addUser({ id: socket.id, userId, name });
-
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    io.emit('getOnlineUsers', { users: getOnlineUsers() });
-
-    console.log(`${user.name} has joined!`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Disconnect to Socket.io')
-    const user = removeUser(socket.id);
-
-    if (user) {
-      io.emit('getOnlineUsers', { users: getOnlineUsers() });
-    }
-  })
-});
-
+initSocket({ io });
 
 server.listen(process.env.PORT || 5000, () => console.log(`Server has started.`));
 

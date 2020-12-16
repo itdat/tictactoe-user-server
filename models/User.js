@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const UserSchema = mongoose.Schema({
-  name: {
+  fullname: {
     type: String,
     required: true,
   },
@@ -17,11 +17,9 @@ const UserSchema = mongoose.Schema({
   },
   token: {
     type: String,
-    unique: true,
   },
   provider: {
     type: String,
-    unique: true,
   },
   date: {
     type: Date,

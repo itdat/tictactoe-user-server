@@ -11,7 +11,7 @@ const User = require("../models/User");
 router.post(
   "/",
   [
-    check("name", "Please add name").not().isEmpty(),
+    check("fullname", "Please add name").not().isEmpty(),
     check("username", "Please include a valid username").not().isEmpty(),
     check(
       "password",
@@ -24,7 +24,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, username, password } = req.body;
+    const { fullname, username, password } = req.body;
 
     try {
       let user = await User.findOne({ username });
@@ -34,7 +34,7 @@ router.post(
       }
 
       user = new User({
-        name,
+        fullname,
         username,
         password,
       });

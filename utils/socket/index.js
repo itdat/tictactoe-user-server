@@ -1,4 +1,4 @@
-const { addGuest, setActiveUser, setRoom, removeGuest, getGuestById, getOnlineUsers } = require('./activeUsers');
+const { addGuest, setActiveUser, setRoom, removeGuest, getGuestById, getOnlineUsers, getRooms } = require('./activeUsers');
 
 
 const initSocket = ({ io }) => {
@@ -18,6 +18,12 @@ const initSocket = ({ io }) => {
     // Reload data because Sidebar cause error if online list component located in different pages
     socket.on('reloadOnlineUsers', () => {
       io.emit('getOnlineUsers', { users: getOnlineUsers() });
+    });
+
+
+    // Reload data
+    socket.on('reloadRooms', () => {
+      socket.emit('getRooms', { rooms: getRooms() });
     });
 
 
@@ -42,8 +48,10 @@ const initSocket = ({ io }) => {
 
       socket.join(guest.room);
 
-      socket.emit('message', { user: 'admin', text: `[${guest.name || socket.id}], welcome to room [${guest.room}].`});
+      socket.emit('message', { user: 'admin', text: `[${guest.name || socket.id}], welcome to room [${guest.room}].` });
       socket.broadcast.to(guest.room).emit('message', { user: 'admin', text: `[${guest.name || socket.id}] has joined!` });
+
+      io.emit('getRooms', { rooms: getRooms() });
 
       console.log(`Client [${socket.id}] has joined room [${guest.room}].`);
       callback();
@@ -55,9 +63,9 @@ const initSocket = ({ io }) => {
       const guest = getGuestById(socket.id);
 
       if (!guest.room) return "[Dev] Please reload page to get new connect."
-  
+
       io.to(guest.room).emit('message', { user: `[${guest.name || socket.id}]`, text: message });
-  
+
       callback();
     });
 
@@ -68,16 +76,20 @@ const initSocket = ({ io }) => {
 
       if (error) return callback(error);
 
+      io.emit('getRooms', { rooms: getRooms() });
+
       console.log(`Client ${user.name} has left the room named [${room}].`);
       callback();
     });
-    
+
 
     // Client is disconnected
     socket.on('disconnect', () => {
       const guest = removeGuest(socket.id);
       io.emit('getOnlineUsers', { users: getOnlineUsers() });
-    })
+
+      io.emit('getRooms', { rooms: getRooms() });
+    });
   });
 }
 

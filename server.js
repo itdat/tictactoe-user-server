@@ -3,12 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const passport = require("passport");
 require("./middlewares/passport");
-const {
-  addUser,
-  removeUser,
-  getUser,
-  getUsersInRoom,
-} = require("./socket/users");
 const connectDB = require("./config/db");
 
 // Init server
@@ -41,11 +35,10 @@ app.use("/api/auth", require("./routes/auth"));
 
 // Connect socket.io
 const socketio = require("socket.io");
-const options = {
-  /* ... */
-};
+const options = {/* ... */ };
 const io = socketio(server, options);
 const { initSocket } = require("./utils/socket");
+
 initSocket({ io });
 
 server.listen(process.env.PORT || 5000, () =>

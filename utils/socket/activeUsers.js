@@ -1,3 +1,5 @@
+const {groupByKey, groupBy } = require('../list');
+
 const guests = [];
 
 const addGuest = ({ id }) => {
@@ -63,4 +65,21 @@ const getUserByName = (name) => guests.find((guest) => guest.name === name);
 // TODO: Create file Enums.js later
 const getOnlineUsers = () => guests.filter((guest) => guest.status === 1);
 
-module.exports = { addGuest, setActiveUser, setRoom, removeGuest, getGuestById, getOnlineUsers };
+const getRooms = () => {
+  const list = guests.slice();
+
+  const groupList = Object.values(groupByKey(list, 'room'));
+
+  const items = groupList.map(group => ({
+    id: group[0].room,
+    name: group[0].room,
+    level: group[0].roomLevel,
+    gamers: group.length,
+    status: group.length === 1 ? 'waiting' : 'playing',
+    participants: group.length, 
+  })).filter(item => item.id !== null);
+
+  return items;
+}
+
+module.exports = { addGuest, setActiveUser, setRoom, removeGuest, getGuestById, getOnlineUsers, getRooms };

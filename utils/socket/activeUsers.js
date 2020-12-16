@@ -1,4 +1,4 @@
-const {groupByKey, groupBy } = require('../list');
+const { groupByKey, groupBy } = require("../list");
 
 const guests = [];
 
@@ -9,17 +9,17 @@ const addGuest = ({ id }) => {
 
   console.log(`Client [${id}] has been added as a guest.`);
   return { guest };
-}
+};
 
 const setActiveUser = ({ id, name, status }) => {
   const user = getGuestById(id);
 
-  if (!name) return { error: 'Username is required.' };
-  if (!status) return { error: 'Status is required.' };
+  if (!name) return { error: "Username is required." };
+  if (!status) return { error: "Status is required." };
 
   // Truong hop user nay da dang nhap dau do
-  const existingUser = getUserByName(name)
-  if (existingUser) return { error: 'This user is taken.' };
+  // const existingUser = getUserByName(name)
+  // if (existingUser) return { error: 'This user is taken.' };
 
   // Truong hop user nay dang nhap lai voi tai khoan khac, hoac dang hap lai tai khoan hien tai
   // khong quan tam nua boi vi sau day da cap nhat lai username tren socket id nay
@@ -28,17 +28,17 @@ const setActiveUser = ({ id, name, status }) => {
     user.name = name;
     user.status = status;
 
-    return { user }
+    return { user };
   }
 
-  return { error: 'Unknown error occurred.' }
-}
+  return { error: "Unknown error occurred." };
+};
 
 const setRoom = ({ id, name, room, roomLevel }) => {
   const guest = getGuestById(id);
 
-  if (!room) return { error: 'Room is required.' };
-  if (!roomLevel) return { error: 'Room Level is required.' };
+  if (!room) return { error: "Room is required." };
+  if (!roomLevel) return { error: "Room Level is required." };
 
   if (guest) {
     guest.room = room;
@@ -46,17 +46,17 @@ const setRoom = ({ id, name, room, roomLevel }) => {
     return { guest };
   }
 
-  return { error: 'Unknown error occurred.' }
-}
+  return { error: "Unknown error occurred." };
+};
 
 const removeGuest = (id) => {
   const index = guests.findIndex((guest) => guest.id === id);
 
   if (index !== -1) {
-    console.log(`Client [${id}] has removed.`)
+    console.log(`Client [${id}] has removed.`);
     return guests.splice(index, 1)[0];
   }
-}
+};
 
 const getGuestById = (id) => guests.find((guest) => guest.id === id);
 
@@ -68,18 +68,28 @@ const getOnlineUsers = () => guests.filter((guest) => guest.status === 1);
 const getRooms = () => {
   const list = guests.slice();
 
-  const groupList = Object.values(groupByKey(list, 'room'));
+  const groupList = Object.values(groupByKey(list, "room"));
 
-  const items = groupList.map(group => ({
-    id: group[0].room,
-    name: group[0].room,
-    level: group[0].roomLevel,
-    gamers: group.length,
-    status: group.length === 1 ? 'waiting' : 'playing',
-    participants: group.length, 
-  })).filter(item => item.id !== null);
+  const items = groupList
+    .map((group) => ({
+      id: group[0].room,
+      name: group[0].room,
+      level: group[0].roomLevel,
+      gamers: group.length,
+      status: group.length === 1 ? "waiting" : "playing",
+      participants: group.length,
+    }))
+    .filter((item) => item.id !== null);
 
   return items;
-}
+};
 
-module.exports = { addGuest, setActiveUser, setRoom, removeGuest, getGuestById, getOnlineUsers, getRooms };
+module.exports = {
+  addGuest,
+  setActiveUser,
+  setRoom,
+  removeGuest,
+  getGuestById,
+  getOnlineUsers,
+  getRooms,
+};

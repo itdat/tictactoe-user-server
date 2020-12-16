@@ -6,8 +6,8 @@ module.exports = function validateRegisterInput(data) {
   data.name = !isEmpty(data.name) ? data.name : "";
   data.username = !isEmpty(data.username) ? data.username : "";
   data.password = !isEmpty(data.password) ? data.password : "";
-  data.password_confirm = !isEmpty(data.password_confirm)
-    ? data.password_confirm
+  data.passwordConfirm = !isEmpty(data.passwordConfirm)
+    ? data.passwordConfirm
     : "";
 
   if (!Validator.isLength(data.name, { min: 2, max: 30 })) {
@@ -34,16 +34,16 @@ module.exports = function validateRegisterInput(data) {
     errors.password = "Password is required";
   }
 
-  if (!Validator.isLength(data.password_confirm, { min: 2, max: 30 })) {
-    errors.password_confirm = "Password must have 2 chars";
+  if (!Validator.isLength(data.passwordConfirm, { min: 2, max: 30 })) {
+    errors.passwordConfirm = "Password must have 2 chars";
   }
 
-  if (!Validator.equals(data.password, data.password_confirm)) {
-    errors.password_confirm = "Password and Confirm Password must match";
+  if (!Validator.equals(data.password, data.passwordConfirm)) {
+    errors.passwordConfirm = "Password and Confirm Password must match";
   }
 
-  if (Validator.isEmpty(data.password_confirm)) {
-    errors.password_confirm = "Password confirm is required";
+  if (Validator.isEmpty(data.passwordConfirm)) {
+    errors.passwordConfirm = "Password confirm is required";
   }
 
   return {

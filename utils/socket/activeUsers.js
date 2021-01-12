@@ -1,95 +1,37 @@
 const { groupByKey, groupBy } = require("../list");
 
-const guests = [];
+const users = [];
 
-const addGuest = ({ id }) => {
-  const guest = { id, name: null, status: null, room: null, roomLevel: null };
+const addUser = ({ id, name }) => {
+  // Check exist
+  const exitingUser = getUserByName(name);
+  if (exitingUser) return {error: `User ${name} is exist`};
 
-  guests.push(guest);
+  const user = { id, name: name, status: null, room: null};
 
-  console.log(`Client [${id}] has been added as a guest.`);
-  return { guest };
+  users.push(user);
+
+  return { user };
 };
 
-const setActiveUser = ({ id, name, status }) => {
-  const user = getGuestById(id);
-
-  if (!name) return { error: "Username is required." };
-  if (!status) return { error: "Status is required." };
-
-  // Truong hop user nay da dang nhap dau do
-  // const existingUser = getUserByName(name)
-  // if (existingUser) return { error: 'This user is taken.' };
-
-  // Truong hop user nay dang nhap lai voi tai khoan khac, hoac dang hap lai tai khoan hien tai
-  // khong quan tam nua boi vi sau day da cap nhat lai username tren socket id nay
-
-  if (user) {
-    user.name = name;
-    user.status = status;
-
-    return { user };
-  }
-
-  return { error: "Unknown error occurred." };
-};
-
-const setRoom = ({ id, name, room, roomLevel }) => {
-  const guest = getGuestById(id);
-
-  if (!room) return { error: "Room is required." };
-  if (!roomLevel) return { error: "Room Level is required." };
-
-  if (guest) {
-    guest.room = room;
-    guest.roomLevel = roomLevel;
-    return { guest };
-  }
-
-  return { error: "Unknown error occurred." };
-};
-
-const removeGuest = (id) => {
-  const index = guests.findIndex((guest) => guest.id === id);
+const removeUser = ({id, name}) => {
+  let index;
+  if (id) {
+    index = users.findIndex((user) => user.id === id);
+  } else if (name) {
+    index = users.findIndex((user) => user.name === name);
+  } else return;
 
   if (index !== -1) {
-    console.log(`Client [${id}] has removed.`);
-    return guests.splice(index, 1)[0];
+    console.log(`User [${id}] has removed.`);
+    return users.splice(index, 1)[0];
   }
 };
 
-const getGuestById = (id) => guests.find((guest) => guest.id === id);
-
-const getUserByName = (name) => guests.find((guest) => guest.name === name);
-
-// TODO: Create file Enums.js later
-const getOnlineUsers = () => guests.filter((guest) => guest.status === 1);
-
-const getRooms = () => {
-  const list = guests.slice();
-
-  const groupList = Object.values(groupByKey(list, "room"));
-
-  const items = groupList
-    .map((group) => ({
-      id: group[0].room,
-      name: group[0].room,
-      level: group[0].roomLevel,
-      gamers: group.length,
-      status: group.length === 1 ? "waiting" : "playing",
-      participants: group.length,
-    }))
-    .filter((item) => item.id !== null);
-
-  return items;
+const getUsers = () => {
+  return users;
 };
 
-module.exports = {
-  addGuest,
-  setActiveUser,
-  setRoom,
-  removeGuest,
-  getGuestById,
-  getOnlineUsers,
-  getRooms,
-};
+const getUserByName = (name) => users.find((user) => user.name === name);
+
+module.exports = {addUser, getUsers, removeUser};

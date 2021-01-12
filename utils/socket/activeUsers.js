@@ -36,4 +36,18 @@ const getUsers = () => {
 
 const getUserByName = (name) => users.find((user) => user.name === name);
 
-module.exports = {addUser, getUsers, removeUser};
+const getUserById = (id) => users.find((user) => user.id === id);
+
+const setUserInRoom = ({ id, room }) => {
+  const user = getUserById(id);
+
+  if (!room) return { error: "RoomId is required." };
+  if (!id) return { error: "UserId is required." };
+
+  if (user) {
+    user.room = room;
+    return { user };
+  }
+};
+
+module.exports = {addUser, getUsers, removeUser, getUserById, setUserInRoom};

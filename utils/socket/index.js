@@ -1,5 +1,5 @@
 const { addUser, getUsers, removeUser, getUserById, setUserInRoom } = require('./activeUsers');
-const { addRoom, getRooms, removeRoom } = require('./rooms');
+const { addRoom, getRooms, removeRoom, getRoomById } = require('./rooms');
 
 const initSocket = ({ io }) => {
   // Once someone have accessed client, they also are connected to the Socket.IO server
@@ -51,12 +51,16 @@ const initSocket = ({ io }) => {
     // Set game room 
     socket.on("joinRoom", ({ roomId, roomName, roomLevel }, callback) => {
       // Add a room to room list if this room is not available
-      const { room } = addRoom({ id: roomId, name: roomName, level: roomLevel });
+      let { room } = addRoom({ id: roomId, name: roomName, level: roomLevel });
 
       // Join room by socket
       socket.join(roomId);
 
-      const { user } = setUserInRoom({ id: socket.id, room: roomId });
+      const { user, error } = setUserInRoom({ id: socket.id, room: roomId });
+
+      if(error) {
+        return;
+      }
 
       // Send message to chat box
       socket.emit('message', { user: 'admin', text: `${user.name}, welcome to room ${roomName}.` });
@@ -66,6 +70,12 @@ const initSocket = ({ io }) => {
       io.emit('getRooms', { rooms: getRooms() });
 
       console.log(`[${socket.id}] Client has joined room [${roomName}].`);
+
+      if(!room) {
+        room = getRoomById(roomId);
+      }
+
+      callback(user, room);
     });
 
     socket.on('reloadRooms', () => {

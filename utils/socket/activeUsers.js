@@ -48,6 +48,8 @@ const setUserInRoom = ({ id, room }) => {
     user.room = room;
     return { user };
   }
+
+  return {error: "User is not exist."};
 };
 
 module.exports = {addUser, getUsers, removeUser, getUserById, setUserInRoom};

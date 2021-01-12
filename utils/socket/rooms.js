@@ -32,4 +32,4 @@ const removeRoom = ({ id }) => {
   }
 };
 
-module.exports = { getRooms, addRoom, removeRoom };
+module.exports = { getRooms, addRoom, removeRoom, getRoomById };

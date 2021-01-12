@@ -22,6 +22,8 @@ const removeUser = ({id, name}) => {
     index = users.findIndex((user) => user.name === name);
   } else return;
 
+  if (index === -1) return { error: "This room is not exist."};
+
   if (index !== -1) {
     console.log(`User [${id}] has removed.`);
     return users.splice(index, 1)[0];

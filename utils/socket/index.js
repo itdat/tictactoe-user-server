@@ -90,6 +90,17 @@ const initSocket = ({ io }) => {
 
       callback();
     });
+
+    // When someone send match info
+    socket.on('sendMatchInfo', (params, callback) => {
+      const user = getUserById(socket.id);
+      // 
+      const room = getRoomById(user.room);
+
+      socket.broadcast.to(user.room).emit('matchInfo', { user: `${user.name}`, data: params});
+
+      callback();
+    });
   });
 
   // Remove game room 

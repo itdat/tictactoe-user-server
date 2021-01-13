@@ -1,5 +1,5 @@
 const { addUser, getUsers, removeUser, getUserById, setUserInRoom } = require('./activeUsers');
-const { addRoom, getRooms, removeRoom, getRoomById } = require('./rooms');
+const { addRoom, getRooms, removeRoom, getRoomById, getQuickRooms } = require('./rooms');
 
 const initSocket = ({ io }) => {
   // Once someone have accessed client, they also are connected to the Socket.IO server
@@ -50,26 +50,16 @@ const initSocket = ({ io }) => {
 
     // Set game room 
     socket.on("joinRoom", ({ roomId, roomName, roomLevel }, callback) => {
-      let user;
-      let room;
-      let msg;
       const host = getUserById(socket.id);
       // Add a room to room list if this room is not available
-      const res = addRoom({ id: socket.id, room: roomId, name: roomName, level: roomLevel, host });
-      user = res.user;
-      room = res.room;
-      msg = res.error;
+      addRoom({ id: socket.id, room: roomId, name: roomName, level: roomLevel, host });
 
-      if (msg) {
-        const res = setUserInRoom({ id: socket.id, room: roomId });
-        user = res.user;
-        room = res.room;
-        msg = res.error;
-      }
+      const {user, room, error} = setUserInRoom({ id: socket.id, room: roomId });
+
       // Join room by socket
       socket.join(roomId);
 
-      if (msg) return;
+      if (error) return;
 
       // Send message to chat box
       socket.emit('message', { user: 'admin', text: `${user.name}, welcome to room ${roomName}.` });
@@ -105,6 +95,26 @@ const initSocket = ({ io }) => {
       socket.broadcast.to(user.room).emit('matchInfo', { user: `${user.name}`, data: params });
 
       callback();
+    });
+
+    socket.on('requestQuickGame', () => {
+      // all rooms -> find rooms with status = "quickly"
+      // if exist -> join first item
+      // else -> create a room with status = "quickly"
+      // notes: this room is hide in room list screen
+      const items = getQuickRooms();
+      let quickRoom;
+
+      if (items.length > 0) {
+        quickRoom = items[0];
+      } else {
+        const host = getUserById(socket.id);
+        // Add a room to room list if this room is not available
+        const res = addRoom({ id: socket.id, room: socket.id, name: socket.id, level: 3, host, status: "quickly" });
+        quickRoom = res.room;
+      }
+
+      socket.emit('quickRoom', {room: quickRoom});
     });
   });
 

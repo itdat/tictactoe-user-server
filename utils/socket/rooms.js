@@ -5,13 +5,13 @@ rooms = [];
 
 const getRooms = () => rooms; 
 
-const addRoom = ({ id, room, name, level, host, player2, guests = [], status }) => {
+const addRoom = ({ id, room, name, level, host, player2, guests = [], status = "waiting" }) => {
   // Id is unique because it is mapped with socket id of room creator
   // Check exist
   const exitingRoom = getRoomById(room);
   if (exitingRoom) return { error: `Room ${name} is exist` };
 
-  const newRoom = { id: room, name, level, host: host, player2: null, guests, status: "waiting"};
+  const newRoom = { id: room, name, level, host: host, player2: null, guests, status};
 
   rooms.push(newRoom);
 
@@ -33,4 +33,6 @@ const removeRoom = ({ id }) => {
   }
 };
 
-module.exports = { getRooms, addRoom, removeRoom, getRoomById };
+const getQuickRooms = () => rooms.filter((item) => item.status === "quickly");
+
+module.exports = { getRooms, addRoom, removeRoom, getRoomById, getQuickRooms };

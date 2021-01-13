@@ -52,7 +52,7 @@ const setUserInRoom = ({ id, room }) => {
   // Calculate role
   const exitingRoom = getRoomById(room);
   if (exitingRoom) {
-    if (exitingRoom.player2 === null) {
+    if (exitingRoom.player2 === null && user.id !== exitingRoom.host.id) {
       exitingRoom.player2 = user;
       exitingRoom.status = "playing"
     } else {

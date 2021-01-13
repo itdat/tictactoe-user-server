@@ -50,17 +50,26 @@ const initSocket = ({ io }) => {
 
     // Set game room 
     socket.on("joinRoom", ({ roomId, roomName, roomLevel }, callback) => {
+      let user;
+      let room;
+      let msg;
+      const host = getUserById(socket.id);
       // Add a room to room list if this room is not available
-      let { room } = addRoom({ id: roomId, name: roomName, level: roomLevel });
+      const res = addRoom({ id: socket.id, room: roomId, name: roomName, level: roomLevel, host });
+      user = res.user;
+      room = res.room;
+      msg = res.error;
 
+      if (msg) {
+        const res = setUserInRoom({ id: socket.id, room: roomId });
+        user = res.user;
+        room = res.room;
+        msg = res.error;
+      }
       // Join room by socket
       socket.join(roomId);
 
-      const { user, error } = setUserInRoom({ id: socket.id, room: roomId });
-
-      if(error) {
-        return;
-      }
+      if (msg) return;
 
       // Send message to chat box
       socket.emit('message', { user: 'admin', text: `${user.name}, welcome to room ${roomName}.` });
@@ -70,10 +79,6 @@ const initSocket = ({ io }) => {
       io.emit('getRooms', { rooms: getRooms() });
 
       console.log(`[${socket.id}] Client has joined room [${roomName}].`);
-
-      if(!room) {
-        room = getRoomById(roomId);
-      }
 
       callback(user, room);
     });
@@ -97,7 +102,7 @@ const initSocket = ({ io }) => {
       // 
       const room = getRoomById(user.room);
 
-      socket.broadcast.to(user.room).emit('matchInfo', { user: `${user.name}`, data: params});
+      socket.broadcast.to(user.room).emit('matchInfo', { user: `${user.name}`, data: params });
 
       callback();
     });

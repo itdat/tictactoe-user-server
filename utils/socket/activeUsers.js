@@ -1,4 +1,5 @@
 const { groupByKey, groupBy } = require("../list");
+const { addRoom, getRooms, removeRoom, getRoomById } = require('./rooms');
 
 const users = [];
 
@@ -46,8 +47,20 @@ const setUserInRoom = ({ id, room }) => {
 
   if (user) {
     user.room = room;
-    return { user };
   }
+
+  // Calculate role
+  const exitingRoom = getRoomById(room);
+  if (exitingRoom) {
+    if (exitingRoom.player2 === null) {
+      exitingRoom.player2 = user;
+      exitingRoom.status = "playing"
+    } else {
+      exitingRoom.guests.push(user);
+    }
+  }
+
+  if (user && exitingRoom) return { user, room: exitingRoom };
 
   return {error: "User is not exist."};
 };

@@ -1,22 +1,23 @@
 const { groupByKey, groupBy } = require("../list");
+const { addUser, getUsers, removeUser, getUserById, setUserInRoom } = require('./activeUsers');
 
 rooms = [];
 
 const getRooms = () => rooms; 
 
-const addRoom = ({ id, name, level, players = [], guests = [], boardHistory = [] }) => {
+const addRoom = ({ id, room, name, level, host, player2, guests = [], status }) => {
   // Id is unique because it is mapped with socket id of room creator
   // Check exist
-  const exitingRoom = getRoomById(id);
+  const exitingRoom = getRoomById(room);
   if (exitingRoom) return { error: `Room ${name} is exist` };
 
-  const room = { id, name, level, players: players, guests: guests, boardHistory: boardHistory};
+  const newRoom = { id: room, name, level, host: host, player2: null, guests, status: "waiting"};
 
-  rooms.push(room);
+  rooms.push(newRoom);
 
   console.log(`Room ${name} is created.`)
 
-  return { room };
+  return { user: host, room: newRoom };
 };
 
 const getRoomById = (id) => rooms.find((room) => room.id === id);

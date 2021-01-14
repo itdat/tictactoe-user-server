@@ -2,126 +2,97 @@ const { addUser, getUsers, removeUser, getUserById, setUserInRoom } = require('.
 const { addRoom, getRooms, removeRoom, getRoomById, getQuickRooms } = require('./rooms');
 
 const initSocket = ({ io }) => {
-  // Once someone accesses a client, they also are connected to the Socket.IO server
+  // Once someone have accessed client, they also are connected to the Socket.IO server
   io.on('connection', socket => {
-    // Log to console
+    // Log
     console.log(`[${socket.id}] Client has connected to Socket.IO.`);
 
-    // Send the online list to all connected clients
-    io.emit('onlineList', { users: getUsers() });
+    // Send online list to all connected clients
+    io.emit('getOnlineUsers', { users: getUsers() });
 
-    socket.on("loadOnlineUser", ({ name }, callback) => {
-      try {
-        const {user, error} = addUser({ id: socket.id, name });
+    socket.on("setOnlineStatus", ({ name }, callback) => {
+      const { error, user } = addUser({ id: socket.id, name });
+      // if (error) return callback(error);
+      // console.log(error);
+      if (error) return;
 
-        io.emit('onlineList', { users: getUsers() });
+      io.emit('getOnlineUsers', { users: getUsers() });
 
-        console.log(`User ${user.name} has been online.`);
-      } catch (error) {
-        // console.log(error);
-        return callback(error);
-      }
-
-      // Above error is not important
-      console.log(`User ${name} has been online.`);
-
-      callback();
+      console.log(`User ${name} has online.`);
     });
 
-    // Remove this user from online list (and logout)
-    socket.on("removeOnlineUser", ({ name }) => {
+    socket.on("removeOnlineStatus", ({ name }) => {
       removeUser({ name: name });
       removeRoom({ id: socket.id });
 
-      io.emit('onlineList', { users: getUsers() });
+      io.emit('getOnlineUsers', { users: getUsers() });
 
-      console.log(`User ${name} has been offline.`);
+      console.log(`User ${name} has offline.`);
     });
 
-    // Client is disconnected (refresh or reopen website)
+    // Client is disconnected
     socket.on('disconnect', () => {
       removeUser({ id: socket.id });
       removeRoom({ id: socket.id });
 
-      io.emit('onlineList', { users: getUsers() });
+      io.emit('getOnlineUsers', { users: getUsers() });
 
-      console.log(`[${socket.id}] Client has disconnected to Socket.IO.`)
+      console.log("[${socket.id}] Client has disconnected to Socket.IO.")
     });
 
-    // Reload data because the sidebar causes error if the online list component is located in different pages
-    socket.on('reloadOnlineList', () => {
-      io.emit('onlineList', { users: getUsers() });
+    // Reload data because Sidebar cause error if online list component located in different pages
+    socket.on('reloadOnlineUsers', () => {
+      io.emit('getOnlineUsers', { users: getUsers() });
     });
-
-
-    /////////////////* **** *////////////////////
-
 
     // Reload room list
-    socket.emit('roomList', { rooms: getRooms() });
+    socket.emit('getRooms', { rooms: getRooms() });
 
     // Set game room 
-    socket.on("joinRoom", ({ name, roomId, roomName, roomLevel }, callback) => {
-      // Host
-      let host = getUserById(socket.id);
-      // Socket id may be changed while refreshing page
-      if (!host) {
-        const res = addUser({ id: socket.id, name });
-        host = res.user;
-        // Also need to update player id for room data in the future..
-      }
-
+    socket.on("joinRoom", ({ roomId, roomName, roomLevel }, callback) => {
+      const host = getUserById(socket.id);
       // Add a room to room list if this room is not available
       addRoom({ id: socket.id, room: roomId, name: roomName, level: roomLevel, host });
 
-      // Update player id for room data
-      const { user, room, error } = setUserInRoom({ id: socket.id, roomId });
-
-      if (error) return callback(error);
+      const { user, room, error } = setUserInRoom({ id: socket.id, room: roomId });
 
       // Join room by socket
       socket.join(roomId);
 
+      if (error) return;
+
       // Send message to chat box
-      socket.emit('message', { user: 'admin', text: `${user.name} (${user.role}), welcome to room ${room.name}.` });
-      socket.broadcast.to(user.room).emit('message', { user: 'admin', text: `${user.name} (${user.role}) has joined!` });
+      socket.emit('message', { user: 'admin', text: `${user.name}, welcome to room ${roomName}.` });
+      socket.broadcast.to(user.room).emit('message', { user: 'admin', text: `${user.name} has joined!` });
 
       // Broadcast to all user about room info
-      io.emit('roomList', { rooms: getRooms() });
+      io.emit('getRooms', { rooms: getRooms() });
 
-      socket.broadcast.to(user.room).emit('roomData', { user, room });
-      console.log(`[${socket.id}] Client [${user.name}] has joined room [${room.name}] as a ${user.role}.`);
+      console.log(`[${socket.id}] Client has joined room [${roomName}].`);
 
       callback(user, room);
     });
 
-    // Reload room list
     socket.on('reloadRooms', () => {
-      io.emit('roomList', { rooms: getRooms() });
+      io.emit('getRooms', { rooms: getRooms() });
     });
 
-    // When someone sends message
+    // When someone send message
     socket.on('sendMessage', (message, callback) => {
       const user = getUserById(socket.id);
 
-      io.to(user.room).emit('message', { user: `${user.name} (${user.role})`, text: message });
+      io.to(user.room).emit('message', { user: `${user.name}`, text: message });
 
       callback();
     });
 
-
-    /////////////////* **** *////////////////////
-
-
-    // When someone sends match info
+    // When someone send match info
     socket.on('sendMatchInfo', (params, callback) => {
       const user = getUserById(socket.id);
-
-      if (!user) return callback({error: "[Socket] User is undefined."});
-      
+      // 
       const room = getRoomById(user.room);
 
-      socket.broadcast.to(user.room).emit('matchInfo', { user, room, data: params });
+      socket.broadcast.to(user.room).emit('matchInfo', { user: `${user.name}`, data: params });
 
       callback();
     });
@@ -136,14 +107,22 @@ const initSocket = ({ io }) => {
 
       if (items.length > 0) {
         quickRoom = items[0];
+        quickRoom.player2 = getUserById(socket.id);
+
+        items[0].status = "playing";
+        io.emit('getRooms', { rooms: getRooms() });
       } else {
         const host = getUserById(socket.id);
         // Add a room to room list if this room is not available
-        const res = addRoom({ id: socket.id, room: socket.id, name: socket.id, level: 3, host, status: "quickly" });
+        const res = addRoom({ room: socket.id, name: socket.id, level: 3, player2: null, host, status: "quickly" });
         quickRoom = res.room;
+
       }
 
-      socket.emit('quickRoom', { room: quickRoom });
+      socket.join(quickRoom.id);
+
+      console.log(quickRoom);
+      io.to(quickRoom.id).emit('quickRoom', { room: quickRoom });
     });
   });
 

@@ -9,13 +9,13 @@ const addRoom = ({ id, room, name, level, host, player2, guests = [], status = "
   // Id is unique because it is mapped with socket id of room creator
   // Check exist
   const exitingRoom = getRoomById(room);
-  if (exitingRoom) return { error: `Room ${name} is exist` };
+  if (exitingRoom) return { error: `[Socket] Room ${name} is exist` };
 
   const newRoom = { id: room, name, level, host: host, player2: null, guests, status};
 
   rooms.push(newRoom);
 
-  console.log(`Room ${name} is created.`)
+  console.log(`[Socket] Room ${name} is created.`)
 
   return { user: host, room: newRoom };
 };
@@ -25,7 +25,7 @@ const getRoomById = (id) => rooms.find((room) => room.id === id);
 const removeRoom = ({ id }) => {
   const index = rooms.findIndex((room) => room.id === id);
 
-  if (index === -1) return { error: "This room is not exist."};
+  if (index === -1) return { error: "[Socket] This room is not exist."};
 
   if (index !== -1) {
     console.log(`Room [${id}] has removed.`);
